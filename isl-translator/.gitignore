@@ -1,0 +1,36 @@
+# Environment
+.env
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ML artefacts — never commit weights, caches or raw data
+checkpoints/*.pth
+checkpoints/*.pt
+models/candidate/*
+models/production/*
+models/archive/*
+!models/candidate/.gitkeep
+!models/production/.gitkeep
+!models/archive/.gitkeep
+cache/
+data/raw/
+data/*.npz
+data/*.csv
+logs/*.jsonl
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store

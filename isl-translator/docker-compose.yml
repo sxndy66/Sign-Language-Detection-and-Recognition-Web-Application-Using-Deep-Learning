@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  isl-translator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: isl-translator
+    environment:
+      WEBHOOK_URL: ${WEBHOOK_URL:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./checkpoints:/app/checkpoints
+      - ./models:/app/models
+      - ./cache:/app/cache
+      - ./logs:/app/logs
+    # Camera access is host-only; mount /dev when running the webcam demo locally.
+    devices:
+      - "/dev/video0:/dev/video0"

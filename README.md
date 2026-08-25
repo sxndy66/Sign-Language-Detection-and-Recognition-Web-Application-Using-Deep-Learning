@@ -1,83 +1,52 @@
-# Real-Time Sign Language Detection and Recognition Web Application Using Deep Learning
+# ISL ⇄ TEXT — Indian Sign Language Recognition Platform
 
-A comprehensive B.Tech capstone project demonstrating production-grade computer vision and deep learning implementation for American Sign Language (ASL) recognition via web interface.
+A production engineering platform for **Indian Sign Language** recognition:
+webcam frames become MediaPipe landmarks, a temporal Transformer reads the
+movement, and a gated state machine commits words into sentences.
 
-## Project Overview
+> No fabricated accuracy. 95% is the engineering **target** — numbers ship only
+> with the run that produced them, in `metrics.json` on a held-out split.
 
-This application detects and recognizes sign language gestures in real-time from webcam feeds, uploaded images, and videos using deep learning models. The system converts predictions into readable text with optional text-to-speech synthesis, providing accessible communication tools for deaf and hard-of-hearing individuals.
+## What's in this repository
 
-**Status:** Under Development (Milestone 3/12)
+| Path | What it is |
+|------|------------|
+| [`index.html`](./index.html) | The ISL ⇄ TEXT platform site — open it in a browser. Includes a live, in-browser demo (MediaPipe Hands WASM + few-shot prototype classifier). |
+| [`isl-translator/`](./isl-translator/) | The full Python engineering project the site documents: `src/`, `configs/`, `scripts/`, `tests/`, `app.py`, Docker, CI. |
 
-## Technology Stack
+## The pipeline — ten stages
 
-### Frontend
-- **Framework:** Next.js 15 + React 19
-- **Language:** TypeScript
-- **Styling:** Tailwind CSS
-- **Animations:** Framer Motion
-- **Webcam:** react-webcam
+webcam → frame routing → MediaPipe Holistic → landmark normalization →
+temporal buffer → spatial encoder → temporal transformer → confidence filter →
+EMA smoothing + stability → sentence builder.
 
-### Backend
-- **Framework:** FastAPI (Python 3.12)
-- **Vision:** OpenCV + MediaPipe Hands
-- **Deep Learning:** PyTorch
-- **Inference:** ONNX Runtime
-- **Deployment:** Render
+Feature schema is a fixed **186-D** row (63 left hand + 63 right hand + 33 pose
++ 24 face + 3 presence flags), asserted in tests, never assumed.
 
-### Database & Services
-- **Database:** PostgreSQL (Supabase)
-- **Authentication:** Supabase Auth
-- **File Storage:** AWS S3
-- **Frontend Hosting:** Vercel
-
-## Quick Start
+## Run the Python project
 
 ```bash
-# Clone repository
-git clone https://github.com/sxndy66/Sign-Language-Detection-and-Recognition-Web-Application-Using-Deep-Learning.git
-cd Sign-Language-Detection-and-Recognition-Web-Application-Using-Deep-Learning
-
-# Setup frontend
-cd frontend
-npm install
-npm run dev
-
-# Setup backend (in another terminal)
-cd backend
+cd isl-translator
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-python -m uvicorn app.main:app --reload
+
+# train / evaluate / run
+python scripts/train_model.py --cfg configs/config.yaml --epochs 60
+python scripts/evaluate_model.py --split test --checkpoint checkpoints/best_model.pth
+streamlit run app.py
+docker compose up --build
+pytest -q
 ```
 
-## Key Features
+See [`isl-translator/README.md`](./isl-translator/README.md) for the full
+quickstart, promotion gates, feedback loop, and field manual.
 
-- ✅ Real-time webcam sign detection
-- ✅ Image & video upload processing
-- ✅ Prediction history with analytics
-- ✅ Text-to-speech synthesis
-- ✅ Dark mode support
-- ✅ User authentication
-- ✅ Admin dashboard
-- ✅ Responsive mobile-first design
-- ✅ WCAG 2.1 AA accessible
+## View the site locally
 
-## Model Performance
-
-**Target Metrics (ASL Alphabet - 26 classes):**
-- Accuracy: 93-96%
-- Architecture: ResNet50 + Transfer Learning
-
-## Documentation
-
-See [docs/](./docs/) folder for comprehensive documentation.
+```bash
+python3 -m http.server 8080   # then open http://localhost:8080
+```
 
 ## License
 
-MIT License - See LICENSE file
-
-## Project Status
-
-Currently implementing: Complete project structure
-
----
-
-Version: 0.1.0-dev | Last Updated: January 2025
+MIT — see [LICENSE](./LICENSE).
