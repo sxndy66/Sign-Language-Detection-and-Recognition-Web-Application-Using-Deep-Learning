@@ -1,0 +1,77 @@
+# ISL ⇄ TEXT — pipeline configuration.
+# Every knob the recognition pipeline touches lives here; the code answers to it.
+
+app:
+  name: isl-translator
+  title: "ISL ⇄ TEXT"
+
+model:
+  name: isl_transformer      # isl_transformer | isl_bilstm
+  feature_dimension: 186     # 63 L-hand + 63 R-hand + 33 pose + 24 face + 3 flags
+  embedding_dim: 256
+  num_heads: 8
+  transformer_layers: 4
+  ff_dim: 512
+  dropout: 0.15
+  num_classes: 50            # set from classes.txt at runtime
+  max_sequence_length: 512
+
+data:
+  classes_file: data/classes.txt
+  raw_dir: data/raw
+  cache_dir: cache/
+  dataset_version: include-v1
+  sequence_length: 60
+  min_frames: 30
+  split_by: signer           # signer | session — never frame (no leakage)
+  val_ratio: 0.15
+  test_ratio: 0.15
+  balance_classes: true
+
+training:
+  epochs: 60
+  batch_size: 32
+  lr: 3.0e-4
+  weight_decay: 1.0e-2
+  warmup_epochs: 3
+  gradient_clip: 1.0
+  early_stop_patience: 12    # on validation macro-F1
+  amp: true                  # float16 + GradScaler when CUDA is available
+  seed: 42
+  scheduler: cosine          # linear warm-up -> cosine annealing
+  num_workers: 4
+
+inference:
+  confidence_threshold: 0.60 # below this, abstain (UNCERTAIN) — never guess
+  temperature: 1.0
+  ema_alpha: 0.35
+  stability_window: 12       # same class on top for N consecutive predictions
+  cooldown_seconds: 1.4
+  sequence_length: 60
+  min_frames: 30
+  latency_budget_ms: 40      # p95 inference must stay under this budget
+
+camera:
+  index: 0
+  width: 640
+  height: 480
+  fps: 30
+
+feedback:
+  webhook_url: ""            # Make.com / n8n webhook (optional)
+  local_log: logs/feedback.jsonl
+  events:                    # emitted events — automation can never promote
+    - prediction_feedback
+    - model_training_requested
+    - dataset_updated
+    - training_completed
+    - model_evaluation_completed
+    - deployment_requested
+
+paths:
+  checkpoints: checkpoints/
+  models_candidate: models/candidate/
+  models_production: models/production/
+  models_archive: models/archive/
+  assets: assets/
+  logs: logs/

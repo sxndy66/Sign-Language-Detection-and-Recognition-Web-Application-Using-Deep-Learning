@@ -1,0 +1,35 @@
+# Candidate evaluation workflow.
+#
+# This workflow evaluates a training artifact and uploads it as a CANDIDATE.
+# It deliberately stops there: promotion to models/production/ is a human
+# decision (gate 4) and is never automated.
+name: evaluate-candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      checkpoint:
+        description: Path to the checkpoint to evaluate (e.g. checkpoints/best_model.pth)
+        required: true
+        default: checkpoints/best_model.pth
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Evaluate on held-out test split
+        run: python scripts/evaluate_model.py --split test --checkpoint "${{ inputs.checkpoint }}"
+      - name: Upload metrics (candidate only — never promoted here)
+        uses: actions/upload-artifact@v4
+        with:
+          name: metrics
+          path: logs/metrics.json
+      - name: Report candidate metrics
+        run: cat logs/metrics.json
